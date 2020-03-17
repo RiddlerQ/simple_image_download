@@ -1,2 +1,1 @@
-# simple_image_download
- 
+I will write README in about a week when i will have a time

@@ -5,7 +5,7 @@ with open('README.md') as readme_file:
 
 setup_args = dict(
     name='simple_image_download',
-    version='0.1',
+    version='0.2',
     description='Downloads raw page from google images and searches for images that can be downloaded',
     long_description=README,
     license='MIT',
@@ -17,7 +17,7 @@ setup_args = dict(
     download_url='https://pypi.org/project/simple_image_download/'
 )
 
-install_requires = []
+install_requires = ['requests']
 
 if __name__ == '__main__':
     setup(**setup_args, install_requires=install_requires)

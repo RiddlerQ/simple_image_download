@@ -1,4 +1,4 @@
-Google image donwloader
+Google image downloader
 =======================
 Python script that lets you search for urls of images from google images using your tags and/or download them automatically onto you computer
 

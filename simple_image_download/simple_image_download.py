@@ -41,7 +41,16 @@ class simple_image_download:
                         print(e)
                         break
 
-                links.append(object_raw)
+
+                try:
+                    r = requests.get(object_raw, allow_redirects=True)
+                    if('html' not in str(r.content)):
+                        links.append(object_raw)
+                    else:
+                        j -= 1
+                except Exception as e:
+                    print(e)
+                    j -= 1
                 j += 1
 
             i += 1
@@ -92,7 +101,10 @@ class simple_image_download:
 
                 try:
                     r = requests.get(object_raw, allow_redirects=True)
-                    open(os.path.join(path, filename), 'wb').write(r.content)
+                    if('html' not in str(r.content)):
+                        open(os.path.join(path, filename), 'wb').write(r.content)
+                    else:
+                        j -= 1
                 except Exception as e:
                     print(e)
                     j -= 1
@@ -126,7 +138,7 @@ class simple_image_download:
 
         try:
             headers = {}
-            headers['User-Agent'] = "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.87 Safari/537.36"
+            headers['User-Agent'] = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3865.90 Safari/537.36"
             req = urllib.request.Request(url, headers=headers)
             resp = urllib.request.urlopen(req)
             respData = str(resp.read())

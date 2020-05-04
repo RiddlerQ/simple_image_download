@@ -5,7 +5,7 @@ with open('README.md', encoding='utf-8') as readme_file:
 
 setup_args = dict(
     name='simple_image_download',
-    version='0.31',
+    version='0.32',
     description='Downloads raw page from google images and searches for images that can be downloaded',
     long_description=README,
 	long_description_content_type='text/markdown',

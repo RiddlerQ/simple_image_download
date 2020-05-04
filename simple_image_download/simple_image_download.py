@@ -34,7 +34,7 @@ class simple_image_download:
                         else:
                             object_raw = (raw_html[new_line + 1:end_object])
 
-                        if '.jpg' in object_raw or 'png' in object_raw or '.ico' in object_raw or '.gif' in object_raw or '.jpeg' in object_raw:
+                        if '.jpg' in object_raw or '.png' in object_raw or '.ico' in object_raw or '.gif' in object_raw or '.jpeg' in object_raw:
                             break
 
                     except Exception as e:
@@ -83,7 +83,7 @@ class simple_image_download:
                         else:
                             object_raw = (raw_html[new_line+1:end_object])
 
-                        if '.jpg' in object_raw or 'png' in object_raw or '.ico' in object_raw or '.gif' in object_raw or '.jpeg' in object_raw:
+                        if '.jpg' in object_raw or '.png' in object_raw or '.ico' in object_raw or '.gif' in object_raw or '.jpeg' in object_raw:
                             break
 
                     except Exception as e:

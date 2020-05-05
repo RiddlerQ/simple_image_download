@@ -4,12 +4,13 @@ import urllib
 import requests
 from urllib.parse import quote
 import array as arr
+import magic # python-magic
 
 class simple_image_download:
     def __init__(self):
         pass
 
-    def urls(self, keywords, limit):
+    def urls(self, keywords, limit, extensions={'.jpg', '.png', '.ico', '.gif', '.jpeg'}):
         keyword_to_search = [str(item).strip() for item in keywords.split(',')]
         i = 0
         links = []
@@ -34,7 +35,7 @@ class simple_image_download:
                         else:
                             object_raw = (raw_html[new_line + 1:end_object])
 
-                        if '.jpg' in object_raw or '.png' in object_raw or '.ico' in object_raw or '.gif' in object_raw or '.jpeg' in object_raw:
+                        if any(extension in object_raw for extension in extensions):
                             break
 
                     except Exception as e:
@@ -57,7 +58,7 @@ class simple_image_download:
         return(links)
 
 
-    def download(self, keywords, limit):
+    def download(self, keywords, limit, extensions={'.jpg', '.png', '.ico', '.gif', '.jpeg'}):
         keyword_to_search = [str(item).strip() for item in keywords.split(',')]
         main_directory = "simple_images/"
         i = 0
@@ -83,7 +84,7 @@ class simple_image_download:
                         else:
                             object_raw = (raw_html[new_line+1:end_object])
 
-                        if '.jpg' in object_raw or '.png' in object_raw or '.ico' in object_raw or '.gif' in object_raw or '.jpeg' in object_raw:
+                        if any(extension in object_raw for extension in extensions):
                             break
 
                     except Exception as e:
@@ -102,7 +103,16 @@ class simple_image_download:
                 try:
                     r = requests.get(object_raw, allow_redirects=True, timeout=1)
                     if('html' not in str(r.content)):
-                        open(os.path.join(path, filename), 'wb').write(r.content)
+                        mime = magic.Magic(mime=True)
+                        file_type = mime.from_buffer(r.content) # checks file data instead of name to typecheck 
+                        file_extension = f'.{file_type.split("/")[1]}'
+                        if file_extension not in extensions:
+                            raise ValueError("Data not an image. Skipping.")
+                        file_name = str(keyword_to_search[i]) + "_" + str(j + 1) + file_extension
+                        print(file_name)
+                        with open(os.path.join(path, file_name), 'wb') as file:
+                            file.write(r.content)
+
                     else:
                         j -= 1
                 except Exception as e:

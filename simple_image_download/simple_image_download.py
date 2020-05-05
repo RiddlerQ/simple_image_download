@@ -70,7 +70,7 @@ class simple_image_download:
             raw_html = self._download_page(url)
 
             end_object = -1;
-
+            google_image_seen = False
             j = 0
             while j < limit:
                 while (True):
@@ -93,8 +93,6 @@ class simple_image_download:
 
                 path = main_directory + keyword_to_search[i].replace(" ","_")
 
-                filename = str(keyword_to_search[i]) + "_" + str(j + 1) + ".jpg"
-
                 try:
                     r = requests.get(object_raw, allow_redirects=True, timeout=1)
                     if('html' not in str(r.content)):
@@ -103,6 +101,9 @@ class simple_image_download:
                         file_extension = f'.{file_type.split("/")[1]}'
                         if file_extension not in extensions:
                             raise ValueError("Data not an image. Skipping.")
+                        if file_extension == '.png' and not google_image_seen:
+                            google_image_seen = True
+                            raise ValueError("Skipping google logo")
                         file_name = str(keyword_to_search[i]) + "_" + str(j + 1) + file_extension
                         print(file_name)
                         with open(os.path.join(path, file_name), 'wb') as file:

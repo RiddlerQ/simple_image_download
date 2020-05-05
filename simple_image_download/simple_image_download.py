@@ -91,12 +91,7 @@ class simple_image_download:
                         print(e)
                         break
 
-                path = main_directory + keyword_to_search[i]
-
-                #print(object_raw)
-
-                if not os.path.exists(path):
-                    os.makedirs(path)
+                path = main_directory + keyword_to_search[i].replace(" ","_")
 
                 filename = str(keyword_to_search[i]) + "_" + str(j + 1) + ".jpg"
 
@@ -124,6 +119,7 @@ class simple_image_download:
 
 
     def _create_directories(self, main_directory, name):
+        name = name.replace(" ", "_")
         try:
             if not os.path.exists(main_directory):
                 os.makedirs(main_directory)

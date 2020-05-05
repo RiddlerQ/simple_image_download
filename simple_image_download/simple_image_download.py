@@ -43,7 +43,7 @@ class simple_image_download:
 
 
                 try:
-                    r = requests.get(object_raw, allow_redirects=True)
+                    r = requests.get(object_raw, allow_redirects=True, timeout=1)
                     if('html' not in str(r.content)):
                         links.append(object_raw)
                     else:
@@ -100,7 +100,7 @@ class simple_image_download:
                 filename = str(keyword_to_search[i]) + "_" + str(j + 1) + ".jpg"
 
                 try:
-                    r = requests.get(object_raw, allow_redirects=True)
+                    r = requests.get(object_raw, allow_redirects=True, timeout=1)
                     if('html' not in str(r.content)):
                         open(os.path.join(path, filename), 'wb').write(r.content)
                     else:

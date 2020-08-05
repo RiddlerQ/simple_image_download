@@ -18,11 +18,11 @@ Documentation
    
    Next you can use response to activate methods:
    
-   - response().download(keywords, limit) -> downloads images to new directory
-     - keywords - for instance -> 'bear'
+   - response().download(keywords, limit, extensions={'.jpg', '.png', '.ico', '.gif', '.jpeg'}) -> downloads images to new directory
+     - keywords - for instance -> 'bear, Mario'
 	 - limit - for instance -> 5
 	 
-   - response().urls(keywords, limit) -> returns urls of google images
+   - response().urls(keywords, limit, extensions={'.jpg', '.png', '.ico', '.gif', '.jpeg'}) -> returns urls of google images
      - keywords - for instance -> 'bear'
 	 - limit - for instance -> 5
 
@@ -38,3 +38,5 @@ I know my code is pretty basic but i just started working with python and i need
 what i needed. 
 
 I hope that we will make this class more usefull together, i will try to post updates with yours and mine ideas
+
+Ps. Thx to CharlesMogan for adding so many fixes and new features.

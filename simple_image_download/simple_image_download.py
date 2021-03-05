@@ -175,7 +175,7 @@ class simple_image_download:
         if isinstance(keywords, str):
             keywords_to_search = [str(item).strip() for item in keywords.split(',')]
         elif isinstance(keywords, Iterable):
-            all_elements_are_strings = all(item is str for item in keywords)
+            all_elements_are_strings = all(isinstance(item, str) for item in keywords)
             if not all_elements_are_strings:
                 raise ValueError('Provided list should consist of strings')
             keywords_to_search = keywords

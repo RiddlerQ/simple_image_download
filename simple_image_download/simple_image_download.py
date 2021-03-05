@@ -12,13 +12,30 @@ class simple_image_download:
     def __init__(self):
         pass
 
-    def urls(self, keywords, limit, extensions={'.jpg', '.png', '.ico', '.gif', '.jpeg'}):
+    def urls(self, keywords, limit: int, extensions={'.jpg', '.png', '.ico', '.gif', '.jpeg'}):
+        """"
+        Get URLs of images by provided keywords
+
+        Arguments:
+        -----------
+        keywords : str or [str]
+            String of keywords separated by column or list of strings (keywords)
+        limit : int
+            Number of images to download for each keyword
+        extensions: set(str)
+            Allowed extensions of images to download
+        main_directory : str
+            directory to store subdirectories for each keyword
+
+        :returns list of URL's
+        """
+
         return self.search(keywords, limit, extensions, should_download_images=False)
 
     def download(
             self,
             keywords,
-            limit,
+            limit: int,
             extensions={'.jpg', '.png', '.ico', '.gif', '.jpeg'},
             main_directory='simple_images/'
     ):
@@ -26,10 +43,15 @@ class simple_image_download:
         Downloads 'limit' images to subdirectory of 'main_directory' named same like keyword
         
         Arguments:
-        keyword -- string of keywords separated by column or list of keywords
-        limit -- number of images to download for each keyword
-        extensions -- allowed extensions of images to download
-        main_directory -- directory to store subdirectories for each keyword
+        -----------
+        keywords : str or [str]
+            String of keywords separated by column or list of strings (keywords)
+        limit : int
+            Number of images to download for each keyword
+        extensions: set(str)
+            Allowed extensions of images to download
+        main_directory : str
+            directory to store subdirectories for each keyword
         """
 
         self.search(keywords, limit, extensions, should_download_images=True, main_directory=main_directory)

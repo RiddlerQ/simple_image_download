@@ -1,7 +1,7 @@
-from downloader import Downloader
+import simple_image_download.simple_image_download as simp
 
 
-my_downloader = Downloader()
+my_downloader = simp.Downloader()
 my_downloader.search_urls('Landsapes',limit=10, verbose=True)
 
 # Get List of Saved URLs in cache

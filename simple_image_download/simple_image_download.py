@@ -5,7 +5,7 @@ import magic
 import progressbar
 from urllib.parse import quote
 import random
-from requests.exceptions import  ReadTimeout
+from requests.exceptions import ReadTimeout
 import functools
 import time
 

@@ -40,7 +40,7 @@ def check_webpage(url):
         request = requests.get(url, allow_redirects=True, timeout=10)
         if 'html' not in str(request.content):
             checked_url = request
-    except ReadTimeout as err:
+    except (ReadTimeout, requests.exceptions.SSLError) as err:
         print(err)
         pass
     return checked_url

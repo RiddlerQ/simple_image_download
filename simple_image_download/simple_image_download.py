@@ -9,7 +9,6 @@ from requests.exceptions import ReadTimeout
 import functools
 import time
 
-
 ################
 # ---> CONSTANTS
 ################
@@ -18,9 +17,18 @@ BASE_URL = 'https://www.google.com/search?q='
 GOOGLE_PICTURE_ID = '''&biw=1536&bih=674&tbm=isch&sxsrf=ACYBGNSXXpS6YmAKUiLKKBs6xWb4uUY5gA:1581168823770&source=lnms&sa=X&ved=0ahUKEwioj8jwiMLnAhW9AhAIHbXTBMMQ_AUI3QUoAQ'''
 HEADERS = {
     'User-Agent':
-    "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3865.90 Safari/537.36"
+        "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3865.90 Safari/537.36"
 }
 SCANNER_COUNTER = None
+
+VALID_FILTERS = {
+    'size': ['l', 'm', 'i'],  # large, medium, icon
+    'color': ['gray', 'trans'],  # black and white, transparent
+    'specific_color': ['red', 'orange', 'yellow', 'green', 'teal', 'blue', 'purple', 'pink', 'white', 'gray', 'black', 'brown'],
+    'type': ['clipart', 'lineart', 'animated'],
+    'time': ['d', 'w', 'm', 'y'],  # last 24 hours, last week, last month, last year
+    'usage_rights': ['cl', 'ol']  # Creative Commons License, Comercial and other Licenses
+}
 
 
 def generate_search_url(keywords):
@@ -29,9 +37,60 @@ def generate_search_url(keywords):
     return keywords_to_search, keywords_count
 
 
-def generate_urls(search):
-    """Generates a URLS in the correct format that brings to Google Image seearch page"""
-    return [(BASE_URL+quote(word)+GOOGLE_PICTURE_ID) for word in search]
+def check_if_filters_are_valid(filters):
+    result = ""
+    is_valid = True
+    if 'color' in filters.keys() and 'specific_color' in filters.keys():
+        is_valid = False
+        result = "Cannot have both 'color' and 'specific_color' keys at the same time."
+    else:
+        for key, value in filters.items():
+            if key in VALID_FILTERS.keys():
+                if value not in VALID_FILTERS[key]:
+                    result = "Filter value '{0}' for key '{1}' is not valid. Valid values are: {2}".format(value, key,
+                                                                                                           VALID_FILTERS[
+                                                                                                               key])
+                    is_valid = False
+                    break
+            else:
+                result = "Filter key '{0}' not valid. Valid keys are: {1}".format(quote(key), list(VALID_FILTERS.keys()))
+                is_valid = False
+                break
+    return is_valid, result
+
+
+def generate_filters_string(filters):
+    is_valid_filters, filter_error = check_if_filters_are_valid(filters)
+    if is_valid_filters:
+        filter_str = "&tbs="
+        keys_list = list(filters)
+        for i in range(len(filters.items())):
+            key = keys_list[i]
+            value = filters[key]
+            if key == 'size':
+                filter_str += "isz:" + value
+            elif key == 'color':
+                filter_str += "ic:" + value
+            elif key == 'specific_color':
+                filter_str += "ic:specific%2Cisc:" + value
+            elif key == 'type':
+                filter_str += "itp:" + value
+            elif key == 'time':
+                filter_str += "qdr:" + value
+            elif key == 'usage_rights':
+                filter_str += "il:" + value
+
+            if i + 1 < len(filters.items()):
+                filter_str += "%2C"
+        return filter_str
+    else:
+        print(filter_error)
+        return ""
+
+
+def generate_urls(search, filters):
+    """Generates a URLS in the correct format that brings to Google Image search page"""
+    return [(BASE_URL + quote(word) + filters + GOOGLE_PICTURE_ID) for word in search]
 
 
 def check_webpage(url):
@@ -74,6 +133,7 @@ class Downloader:
         Main Downloader
         ::param extension:iterable of Files extensions
     """
+
     def __init__(self, extensions=None):
         if extensions:
             self._extensions = set(*[extensions])
@@ -103,7 +163,6 @@ class Downloader:
     def extensions(self, value):
         self._extensions = set([value])
 
-
     def get_urls(self):
         return [self._cached_urls[url][1].url
                 for url in self._cached_urls]
@@ -114,10 +173,13 @@ class Downloader:
         resp_data = str(resp.read())
         return resp_data
 
-    def search_urls(self, keywords, limit=1, verbose=False, cache=True, timer=None):
+    def search_urls(self, keywords, limit=10, verbose=False, cache=True, timer=None, filters={}):
         cache_out = {}
         search, count = generate_search_url(keywords)
-        urls_ = generate_urls(search)
+        filters_ = generate_filters_string(filters)
+        if filters is not {} and filters_ == "":
+            return
+        urls_ = generate_urls(search, filters_)
         timer = timer if timer else 1000
         max_progressbar = count * (list(range(limit+1))[-1]+1)
         bar = progressbar.ProgressBar(maxval=max_progressbar,
@@ -146,11 +208,13 @@ class Downloader:
             self._cached_urls = cache_out
         if not cache_out:
             print('==='*15 + ' < ' + 'NO PICTURES FOUND' + ' > ' + '==='*15)
+
         return cache_out
 
-    def download(self, keywords=None, limit=1, verbose=False, cache=True, download_cache=False, timer=None):
+
+    def download(self, keywords=None, limit=1, verbose=False, cache=True, download_cache=False, timer=None, filters={}):
         if not download_cache:
-            content = self.search_urls(keywords, limit, verbose, cache, timer)
+            content = self.search_urls(keywords, limit, verbose, cache, timer, filters)
         else:
             content = self._cached_urls
             if not content:

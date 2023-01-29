@@ -32,7 +32,7 @@ VALID_FILTERS = {
 
 
 def generate_search_url(keywords):
-    keywords_to_search = [str(item).strip() for item in keywords.split(',')][0].split()
+    keywords_to_search = keywords.split(',')
     keywords_count = len(keywords_to_search)
     return keywords_to_search, keywords_count
 

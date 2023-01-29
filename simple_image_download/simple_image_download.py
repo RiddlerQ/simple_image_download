@@ -220,6 +220,7 @@ class Downloader:
             if not content:
                 print('Downloader has not URLs saved in Memory yet, run Downloader.search_urls to find pics first')
         for name, (path, url) in content.items():
+            name = name.replace(" ", "_")
             with open(os.path.join(path, name), 'wb') as file:
                 file.write(url.content)
             if verbose:

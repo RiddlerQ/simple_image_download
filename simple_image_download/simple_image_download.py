@@ -6,8 +6,6 @@ import progressbar
 from urllib.parse import quote
 import random
 from requests.exceptions import ReadTimeout
-import functools
-import time
 
 
 ################
@@ -18,28 +16,90 @@ BASE_URL = 'https://www.google.com/search?q='
 GOOGLE_PICTURE_ID = '''&biw=1536&bih=674&tbm=isch&sxsrf=ACYBGNSXXpS6YmAKUiLKKBs6xWb4uUY5gA:1581168823770&source=lnms&sa=X&ved=0ahUKEwioj8jwiMLnAhW9AhAIHbXTBMMQ_AUI3QUoAQ'''
 HEADERS = {
     'User-Agent':
-    "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3865.90 Safari/537.36"
+    "Mozilla/5.0 (Windows; U; Windows NT 6.1; WOW64) AppleWebKit/602.42 (KHTML, like Gecko) Chrome/77.0.3865.90 Safari/537.36",
+    "Accept-Encoding": "*",
+    "Connection": "keep-alive"
 }
 SCANNER_COUNTER = None
-
+VALID_FILTERS = {
+    'size': ['l', 'm', 'i'],  # large, medium, icon
+    'color': ['gray', 'trans'],  # black and white, transparent
+    'specific_color': ['red', 'orange', 'yellow', 'green', 'teal', 'blue', 'purple', 'pink', 'white', 'gray', 'black', 'brown'],
+    'type': ['clipart', 'lineart', 'animated'],
+    'time': ['d', 'w', 'm', 'y'],  # last 24 hours, last week, last month, last year
+    'usage_rights': ['cl', 'ol']  # Creative Commons License, Comercial and other Licenses
+}
 
 def generate_search_url(keywords):
-    keywords_to_search = [str(item).strip() for item in keywords.split(',')][0].split()
+    # keywords_to_search = [str(item).strip() for item in keywords.split(',')][0].split()
+    keywords_to_search = keywords.split(',')
+    print(keywords_to_search)
     keywords_count = len(keywords_to_search)
     return keywords_to_search, keywords_count
 
+def check_if_filters_are_valid(filters):
+    result = ""
+    is_valid = True
+    if 'color' in filters.keys() and 'specific_color' in filters.keys():
+        is_valid = False
+        result = "Cannot have both 'color' and 'specific_color' keys at the same time."
+    else:
+        for key, value in filters.items():
+            if key in VALID_FILTERS.keys():
+                if value not in VALID_FILTERS[key]:
+                    result = "Filter value '{0}' for key '{1}' is not valid. Valid values are: {2}".format(value, key,
+                                                                                                           VALID_FILTERS[
+                                                                                                               key])
+                    is_valid = False
+                    break
+            else:
+                result = "Filter key '{0}' not valid. Valid keys are: {1}".format(quote(key), list(VALID_FILTERS.keys()))
+                is_valid = False
+                break
+    return is_valid, result
 
-def generate_urls(search):
-    """Generates a URLS in the correct format that brings to Google Image seearch page"""
-    return [(BASE_URL+quote(word)+GOOGLE_PICTURE_ID) for word in search]
+def generate_filters_string(filters):
+    is_valid_filters, filter_error = check_if_filters_are_valid(filters)
+    if is_valid_filters:
+        filter_str = "&tbs="
+        keys_list = list(filters)
+        for i in range(len(filters.items())):
+            key = keys_list[i]
+            value = filters[key]
+            if key == 'size':
+                filter_str += "isz:" + value
+            elif key == 'color':
+                filter_str += "ic:" + value
+            elif key == 'specific_color':
+                filter_str += "ic:specific%2Cisc:" + value
+            elif key == 'type':
+                filter_str += "itp:" + value
+            elif key == 'time':
+                filter_str += "qdr:" + value
+            elif key == 'usage_rights':
+                filter_str += "il:" + value
 
+            if i + 1 < len(filters.items()):
+                filter_str += "%2C"
+        return filter_str
+    else:
+        print(filter_error)
+        return ""
+
+
+def generate_urls(search, filters):
+    """Generates a URLS in the correct format that brings to Google Image search page"""
+    return [(BASE_URL + quote(word) + filters + GOOGLE_PICTURE_ID) for word in search]
 
 def check_webpage(url):
     checked_url = None
     try:
-        request = requests.get(url, allow_redirects=True, timeout=10)
+        request = requests.get(url, allow_redirects=True, timeout=5)
         if 'html' not in str(request.content):
             checked_url = request
+    except requests.exceptions.RequestException as e:
+        print("requests exception:", url)
+        pass
     except ReadTimeout as err:
         print(err)
         pass
@@ -109,15 +169,23 @@ class Downloader:
                 for url in self._cached_urls]
 
     def _download_page(self, url):
-        req = urllib.request.Request(url, headers=HEADERS)
-        resp = urllib.request.urlopen(req)
-        resp_data = str(resp.read())
+        resp_data=None
+        try:
+            req = urllib.request.Request(url, headers=HEADERS)
+            resp = urllib.request.urlopen(req)
+            resp_data = str(resp.read())
+        except urllib.error.URLError:
+            print("URL lib erl error")
+            pass
         return resp_data
 
-    def search_urls(self, keywords, limit=1, verbose=False, cache=True, timer=None):
+    def search_urls(self, keywords, limit=10, verbose=False, cache=True, timer=None, filters={}):
         cache_out = {}
         search, count = generate_search_url(keywords)
-        urls_ = generate_urls(search)
+        filters_ = generate_filters_string(filters)
+        if filters is not {} and filters_ == "":
+            return
+        urls_ = generate_urls(search, filters_)
         timer = timer if timer else 1000
         max_progressbar = count * (list(range(limit+1))[-1]+1)
         bar = progressbar.ProgressBar(maxval=max_progressbar,
@@ -148,15 +216,16 @@ class Downloader:
             print('==='*15 + ' < ' + 'NO PICTURES FOUND' + ' > ' + '==='*15)
         return cache_out
 
-    def download(self, keywords=None, limit=1, verbose=False, cache=True, download_cache=False, timer=None):
+    def download(self, keywords=None, limit=1, verbose=False, cache=True, download_cache=False, timer=None, filters={}):
         if not download_cache:
-            content = self.search_urls(keywords, limit, verbose, cache, timer)
+            content = self.search_urls(keywords, limit, verbose, cache, timer, filters)
         else:
             content = self._cached_urls
             if not content:
                 print('Downloader has not URLs saved in Memory yet, run Downloader.search_urls to find pics first')
         for name, (path, url) in content.items():
-            with open(os.path.join(path, name), 'wb') as file:
+            name = name.replace(" ", "_")
+            with open(os.path.join(path, name), 'wb+') as file:
                 file.write(url.content)
             if verbose:
                 print(f'File Name={name}, Downloaded from {url.url}')
